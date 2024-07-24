@@ -14,7 +14,7 @@ export default class TaskList extends Component {
         description: PropTypes.string.isRequired,
         done: PropTypes.bool.isRequired,
         editing: PropTypes.bool.isRequired,
-        created: PropTypes.instanceOf(Date),
+        created: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.string]),
       })
     ).isRequired,
     onDeleted: PropTypes.func.isRequired,
@@ -44,17 +44,20 @@ export default class TaskList extends Component {
   }
 
   render() {
-    const { tasks, onDeleted, onEditing, onCheckBoxClick, onEditingTask } = this.props
+    const { tasks, onDeleted, onEditing, onCheckBoxClick, onEditingTask, onStartTimer, onStopTimer } = this.props
     let items = tasks.map((item) => {
       const { id, ...itemOptions } = item
       return (
         <Task
           key={id}
           {...itemOptions}
+          id={id}
           onDeleted={() => onDeleted(id)}
           onEditing={() => onEditing(id)}
           onCheckBoxClick={() => onCheckBoxClick(id)}
           onEditingTask={(value) => onEditingTask(id, value)}
+          onStartTimer={() => onStartTimer(id)}
+          onStopTimer={() => onStopTimer(id)}
         />
       )
     })

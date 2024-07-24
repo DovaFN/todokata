@@ -16,7 +16,7 @@ export default class Task extends Component {
     done: PropTypes.bool.isRequired,
     editing: PropTypes.bool.isRequired,
     className: PropTypes.string,
-    created: PropTypes.instanceOf(Date),
+    created: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.string]),
     onDeleted: PropTypes.func,
     onCheckBoxClick: PropTypes.func,
     onEditing: PropTypes.func,
@@ -28,17 +28,19 @@ export default class Task extends Component {
     editing: false,
     created: new Date(),
     className: ' ',
+    minutes: 3,
+    seconds: 2,
     onDeleted: () => {},
     onCheckBoxClick: () => {},
     onEditing: () => {},
   }
 
   componentDidMount() {
-    this.timerID = setInterval(() => this.tick(), 5000)
+    this.timerTickID = setInterval(() => this.tick(), 5000)
   }
 
   componentWillUnmount() {
-    clearInterval(this.timerID)
+    clearInterval(this.timerTickID)
   }
 
   tick() {
@@ -61,7 +63,19 @@ export default class Task extends Component {
   }
 
   render() {
-    let { description, done, editing, className, onDeleted, onCheckBoxClick, onEditing } = this.props
+    let {
+      description,
+      done,
+      editing,
+      className,
+      onDeleted,
+      onCheckBoxClick,
+      onEditing,
+      minutes,
+      seconds,
+      onStopTimer,
+      onStartTimer,
+    } = this.props
     const { timeFromCreating, inputValue } = this.state
 
     if (done) {
@@ -76,8 +90,13 @@ export default class Task extends Component {
         <div className="view">
           <input className="toggle" type="checkbox" checked={done} onChange={onCheckBoxClick} />
           <label>
-            <span className="description">{description} </span>
-            <span className="created">{timeFromCreating}</span>
+            <span className="title">{description} </span>
+            <span className="description">
+              <button onClick={onStartTimer} className="icon icon-play"></button>
+              <button onClick={onStopTimer} className="icon icon-pause"></button>
+              {minutes > 10 ? minutes : `0${minutes}`}:{seconds > 10 ? seconds : `0${seconds}`}
+            </span>
+            <span className="description">{timeFromCreating}</span>
           </label>
           <button className="icon icon-edit" onClick={onEditing}></button>
           <button className="icon icon-destroy" onClick={onDeleted}></button>

@@ -4,7 +4,9 @@ import PropTypes from 'prop-types'
 
 export default class NewTaskForm extends Component {
   state = {
-    value: '',
+    text: '',
+    minutes: '',
+    seconds: '',
   }
 
   static propTypes = {
@@ -20,29 +22,66 @@ export default class NewTaskForm extends Component {
   }
 
   onChanging = (e) => {
+    const { name, value } = e.target
     this.setState({
-      value: e.target.value,
+      [name]: value,
     })
   }
 
+  validateTimeInput = (e) => {
+    const { value } = e.target
+    if (value <= 60 && value >= 0) {
+      this.onChanging(e)
+    }
+  }
+
   onSubmit = (e) => {
+    const { text, minutes, seconds } = this.state
     e.preventDefault()
-    this.props.onAdded(this.state.value)
+    this.props.onAdded(text, minutes, seconds)
     this.setState({
-      value: '',
+      text: '',
+      minutes: '',
+      seconds: '',
     })
+  }
+
+  onKeyDown = (e) => {
+    if (e.code === 'Enter') {
+      this.onSubmit(e)
+    }
   }
 
   render() {
     const { className, placeholder, autoFocus } = this.props
     return (
-      <form onSubmit={this.onSubmit} onChange={() => {}}>
+      <form className={'new-todo-form'} onSubmit={this.onSubmit} onChange={() => {}}>
         <input
+          name="text"
           className={className}
           placeholder={placeholder}
           autoFocus={autoFocus}
           onChange={this.onChanging}
-          value={this.state.value}
+          onKeyDown={this.onKeyDown}
+          value={this.state.text}
+        />
+        <input
+          name="minutes"
+          className="new-todo-form__timer"
+          value={this.state.minutes}
+          onChange={this.validateTimeInput}
+          placeholder="Min"
+          onKeyDown={this.onKeyDown}
+          autoFocus
+        />
+        <input
+          name="seconds"
+          className="new-todo-form__timer"
+          value={this.state.seconds}
+          onChange={this.validateTimeInput}
+          placeholder="Sec"
+          autoFocus
+          onKeyDown={this.onKeyDown}
         />
       </form>
     )

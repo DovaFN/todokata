@@ -5,7 +5,6 @@ import TaskList from '../TaskList'
 import Footer from '../Footer'
 import './TodoApp.css'
 
-// sdsdsds
 export default class TodoApp extends Component {
   maxId = 100
   maxFilterKey = 1
@@ -13,6 +12,32 @@ export default class TodoApp extends Component {
     tasks: [this.createTask('Completed Task'), this.createTask('Editing task'), this.createTask('Active Task')],
     filter: 'All',
     filters: [this.createFilter('All', 'selected'), this.createFilter('Active'), this.createFilter('Completed')],
+  }
+
+  onStartTimer = (id) => {
+    clearTimeout(this[id])
+    const { tasks } = this.state
+    const arr = tasks.slice()
+    const idx = arr.findIndex((item) => item.id === id)
+    const el = arr[idx]
+    this[id] = setTimeout(() => {
+      this.timerCounter = 1
+      if (el.seconds === 0 && el.minutes >= 1) {
+        el.seconds += 60
+        el.minutes -= 1
+        this.setState({ tasks: arr })
+        this.onStartTimer(id)
+      }
+      if (el.seconds !== 0) {
+        el.seconds -= 1
+        this.setState({ tasks: arr })
+        this.onStartTimer(id)
+      }
+    }, 1000)
+  }
+
+  onStopTimer = (id) => {
+    clearTimeout(this[id])
   }
 
   createFilter(label, className) {
@@ -30,18 +55,21 @@ export default class TodoApp extends Component {
     return newTodoData
   }
 
-  createTask(description) {
+  createTask(description, minutes, seconds) {
     return {
       id: this.maxId++,
       description: description,
       created: new Date(),
       done: false,
+      minutes: +minutes || 4,
+      seconds: +seconds || 4,
+      timerCounter: 0,
       editing: false,
     }
   }
 
-  addTask = (description) => {
-    const newTask = this.createTask(description)
+  addTask = (description, minutes, seconds) => {
+    const newTask = this.createTask(description, minutes, seconds)
     this.setState(({ tasks }) => {
       return {
         tasks: [...tasks.slice(), newTask],
@@ -67,6 +95,7 @@ export default class TodoApp extends Component {
   }
 
   deleteItem = (id) => {
+    this.onStopTimer(id)
     this.setState(({ tasks }) => {
       let newTasks = tasks.filter((item) => item.id !== id)
       return { tasks: newTasks }
@@ -85,6 +114,10 @@ export default class TodoApp extends Component {
     this.setState(({ tasks }) => {
       const tasksCopy = tasks.slice()
       const newTasks = tasksCopy.filter((item) => !item.done)
+      const unmountArr = tasksCopy.filter((item) => item.done)
+      unmountArr.forEach((element) => {
+        this.onStopTimer(element.id)
+      })
       return {
         tasks: newTasks,
       }
@@ -133,11 +166,14 @@ export default class TodoApp extends Component {
         : (filteredTasks = tasks.slice())
 
     const doneCounter = tasks.filter((item) => !item.done).length
+
     return (
       <section className="todoapp">
         <AppHeader onAdded={this.addTask} />
         <section className="main">
           <TaskList
+            onStartTimer={this.onStartTimer}
+            onStopTimer={this.onStopTimer}
             tasks={filteredTasks}
             onDeleted={this.deleteItem}
             onCheckBoxClick={this.onCheckBoxClick}
