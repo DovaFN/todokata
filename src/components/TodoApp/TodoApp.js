@@ -16,20 +16,13 @@ export default class TodoApp extends Component {
 
   onStartTimer = (id) => {
     clearTimeout(this[id])
-    const { tasks } = this.state
-    const arr = tasks.slice()
-    const idx = arr.findIndex((item) => item.id === id)
-    const el = arr[idx]
     this[id] = setTimeout(() => {
-      this.timerCounter = 1
-      if (el.seconds === 0 && el.minutes >= 1) {
-        el.seconds += 60
-        el.minutes -= 1
-        this.setState({ tasks: arr })
-        this.onStartTimer(id)
-      }
-      if (el.seconds !== 0) {
-        el.seconds -= 1
+      const { tasks } = this.state
+      const arr = tasks.slice()
+      const idx = arr.findIndex((item) => item.id === id)
+      const el = arr[idx]
+      if (el.time !== 0) {
+        el.time -= 1
         this.setState({ tasks: arr })
         this.onStartTimer(id)
       }
@@ -55,21 +48,20 @@ export default class TodoApp extends Component {
     return newTodoData
   }
 
-  createTask(description, minutes, seconds) {
+  createTask(description, time) {
     return {
       id: this.maxId++,
       description: description,
       created: new Date(),
       done: false,
-      minutes: +minutes || 4,
-      seconds: +seconds || 4,
+      time: time || 0,
       timerCounter: 0,
       editing: false,
     }
   }
 
-  addTask = (description, minutes, seconds) => {
-    const newTask = this.createTask(description, minutes, seconds)
+  addTask = (description, time) => {
+    const newTask = this.createTask(description, time)
     this.setState(({ tasks }) => {
       return {
         tasks: [...tasks.slice(), newTask],
@@ -121,6 +113,16 @@ export default class TodoApp extends Component {
       return {
         tasks: newTasks,
       }
+    })
+  }
+  onClickedAfterTarget = () => {
+    const newArr = this.state.tasks.slice()
+    const res = newArr.map((el) => {
+      el.editing = false
+      return el
+    })
+    this.setState({
+      tasks: res,
     })
   }
 
@@ -179,6 +181,7 @@ export default class TodoApp extends Component {
             onCheckBoxClick={this.onCheckBoxClick}
             onEditing={this.onEditing}
             onEditingTask={this.editTaskDescription}
+            onClickedAfterTarget={this.onClickedAfterTarget}
           />
           <Footer onFilter={this.onFilter} filters={filters} onClear={this.onClear} doneCounter={doneCounter} />
         </section>

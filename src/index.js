@@ -6,4 +6,8 @@ import './index.css'
 import TodoApp from './components/TodoApp'
 
 const root = createRoot(document.getElementById('root'))
-root.render(<TodoApp />)
+root.render(
+  <React.StrictMode>
+    <TodoApp />
+  </React.StrictMode>
+)

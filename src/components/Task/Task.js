@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, useEffect, useRef } from 'react'
 import './Task.css'
 import { formatDistanceToNowStrict } from 'date-fns'
 import PropTypes from 'prop-types'
@@ -9,6 +9,7 @@ export default class Task extends Component {
       addSuffix: true,
     }),
     inputValue: this.props.description,
+    description: this.props.description,
   }
 
   static propTypes = {
@@ -28,7 +29,6 @@ export default class Task extends Component {
     editing: false,
     created: new Date(),
     className: ' ',
-    minutes: 3,
     seconds: 2,
     onDeleted: () => {},
     onCheckBoxClick: () => {},
@@ -62,6 +62,14 @@ export default class Task extends Component {
     this.props.onEditingTask(this.state.inputValue)
   }
 
+  onClickedAfterTarget = () => {
+    const { onClickedAfterTarget, description } = this.props
+    this.setState({
+      inputValue: description,
+    })
+    onClickedAfterTarget()
+  }
+
   render() {
     let {
       description,
@@ -71,8 +79,7 @@ export default class Task extends Component {
       onDeleted,
       onCheckBoxClick,
       onEditing,
-      minutes,
-      seconds,
+      time,
       onStopTimer,
       onStartTimer,
     } = this.props
@@ -85,28 +92,72 @@ export default class Task extends Component {
       className = 'editing'
     }
 
+    let minutes = Math.floor(time / 60)
+    const seconds = time - minutes * 60
+
     return (
       <li className={className}>
-        <div className="view">
-          <input className="toggle" type="checkbox" checked={done} onChange={onCheckBoxClick} />
-          <label>
-            <span className="title">{description} </span>
-            <span className="description">
-              <button onClick={onStartTimer} className="icon icon-play"></button>
-              <button onClick={onStopTimer} className="icon icon-pause"></button>
-              {minutes > 10 ? minutes : `0${minutes}`}:{seconds > 10 ? seconds : `0${seconds}`}
-            </span>
-            <span className="description">{timeFromCreating}</span>
-          </label>
-          <button className="icon icon-edit" onClick={onEditing}></button>
-          <button className="icon icon-destroy" onClick={onDeleted}></button>
-        </div>
         {editing ? (
-          <form onSubmit={this.onSubmit} onChange={() => {}}>
-            <input type="text" className="edit" value={inputValue} onChange={this.onChanging} />
-          </form>
-        ) : null}
+          <EditingForm
+            onSubmit={this.onSubmit}
+            onChanging={this.onChanging}
+            inputValue={inputValue}
+            onEditing={onEditing}
+            onClickedAfterTarget={this.onClickedAfterTarget}
+          />
+        ) : (
+          <div className="view">
+            <input className="toggle" type="checkbox" checked={done} onChange={onCheckBoxClick} />
+            <label>
+              <span className="title">{description} </span>
+              <span className="description">
+                <button onClick={onStartTimer} className="icon icon-play"></button>
+                <button onClick={onStopTimer} className="icon icon-pause"></button>
+                {minutes > 9 ? minutes : `0${minutes}`}:{seconds > 9 ? seconds : `0${seconds}`}
+              </span>
+
+              <span className="description">{timeFromCreating}</span>
+            </label>
+            <button className="icon icon-edit" onClick={onEditing}></button>
+            <button className="icon icon-destroy" onClick={onDeleted}></button>
+          </div>
+        )}
       </li>
     )
   }
+}
+
+const EditingForm = ({ onSubmit, inputValue, onChanging, onClickedAfterTarget }) => {
+  const rootEl = useRef(null)
+
+  const onKeyDown = (e) => {
+    if (e.code === 'Escape') {
+      onClickedAfterTarget()
+    }
+  }
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.code === 'Escape') {
+        onClickedAfterTarget()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('click', onKeyDown)
+  }, [])
+
+  useEffect(() => {
+    const onClick = (e) =>
+      e.target.className === 'icon icon-edit' || rootEl.current.contains(e.target) || onClickedAfterTarget()
+    document.addEventListener('click', onClick)
+    return () => document.removeEventListener('click', onClick)
+  }, [])
+
+  return (
+    <div ref={rootEl}>
+      <form onSubmit={onSubmit} onChange={() => {}} onKeyDown={onKeyDown}>
+        <input type="text" className="edit" value={inputValue} onChange={onChanging} />
+      </form>
+    </div>
+  )
 }

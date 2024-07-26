@@ -37,18 +37,27 @@ export default class NewTaskForm extends Component {
 
   onSubmit = (e) => {
     const { text, minutes, seconds } = this.state
+    const time = +minutes * 60 + +seconds
     e.preventDefault()
-    this.props.onAdded(text, minutes, seconds)
-    this.setState({
-      text: '',
-      minutes: '',
-      seconds: '',
-    })
+    if (text !== ' ' && text !== '') {
+      this.props.onAdded(text, time)
+      this.setState({
+        text: '',
+        minutes: '',
+        seconds: '',
+      })
+    }
   }
 
   onKeyDown = (e) => {
+    const { text } = this.state
     if (e.code === 'Enter') {
       this.onSubmit(e)
+    }
+    if (text === ' ') {
+      this.setState({
+        text: '',
+      })
     }
   }
 

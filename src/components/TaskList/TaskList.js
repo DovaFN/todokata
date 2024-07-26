@@ -44,7 +44,16 @@ export default class TaskList extends Component {
   }
 
   render() {
-    const { tasks, onDeleted, onEditing, onCheckBoxClick, onEditingTask, onStartTimer, onStopTimer } = this.props
+    const {
+      tasks,
+      onDeleted,
+      onEditing,
+      onCheckBoxClick,
+      onEditingTask,
+      onStartTimer,
+      onStopTimer,
+      onClickedAfterTarget,
+    } = this.props
     let items = tasks.map((item) => {
       const { id, ...itemOptions } = item
       return (
@@ -58,6 +67,7 @@ export default class TaskList extends Component {
           onEditingTask={(value) => onEditingTask(id, value)}
           onStartTimer={() => onStartTimer(id)}
           onStopTimer={() => onStopTimer(id)}
+          onClickedAfterTarget={onClickedAfterTarget}
         />
       )
     })
