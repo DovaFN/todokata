@@ -1,130 +1,98 @@
-import React, { Component, useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import './Task.css'
 import { formatDistanceToNowStrict } from 'date-fns'
 import PropTypes from 'prop-types'
 
-export default class Task extends Component {
-  state = {
-    timeFromCreating: formatDistanceToNowStrict(this.props.created, {
+function Task({
+  created = new Date(),
+  description: propsDescription = '',
+  done = false,
+  editing = false,
+  className = ' ',
+  onDeleted = () => {},
+  onCheckBoxClick = () => {},
+  onEditing = () => {},
+  time = null,
+  onStopTimer = () => {},
+  onEditingTask = () => {},
+  onStartTimer = () => {},
+  onClickedAfterTarget: propsOnClickedAfterTarget = () => {},
+}) {
+  const [timeFromCreating, setTimeFromCreating] = useState(
+    formatDistanceToNowStrict(created, {
       addSuffix: true,
-    }),
-    inputValue: this.props.description,
-    description: this.props.description,
-  }
+    })
+  )
+  const [inputValue, setInputValue] = useState(propsDescription)
+  const [description, setDescription] = useState(propsDescription)
 
-  static propTypes = {
-    description: PropTypes.string.isRequired,
-    done: PropTypes.bool.isRequired,
-    editing: PropTypes.bool.isRequired,
-    className: PropTypes.string,
-    created: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.string]),
-    onDeleted: PropTypes.func,
-    onCheckBoxClick: PropTypes.func,
-    onEditing: PropTypes.func,
-  }
+  useEffect(() => {
+    const timerTickID = setInterval(() => tick(), 5000)
+    return () => clearInterval(timerTickID)
+  }, [])
 
-  static defaultProps = {
-    description: '',
-    done: false,
-    editing: false,
-    created: new Date(),
-    className: ' ',
-    seconds: 2,
-    onDeleted: () => {},
-    onCheckBoxClick: () => {},
-    onEditing: () => {},
-  }
-
-  componentDidMount() {
-    this.timerTickID = setInterval(() => this.tick(), 5000)
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.timerTickID)
-  }
-
-  tick() {
-    this.setState({
-      timeFromCreating: formatDistanceToNowStrict(this.props.created, {
+  const tick = () => {
+    setTimeFromCreating(
+      formatDistanceToNowStrict(created, {
         addSuffix: true,
-      }),
-    })
-  }
-
-  onChanging = (e) => {
-    this.setState({
-      inputValue: e.target.value,
-    })
-  }
-
-  onSubmit = (e) => {
-    e.preventDefault()
-    this.props.onEditingTask(this.state.inputValue)
-  }
-
-  onClickedAfterTarget = () => {
-    const { onClickedAfterTarget, description } = this.props
-    this.setState({
-      inputValue: description,
-    })
-    onClickedAfterTarget()
-  }
-
-  render() {
-    let {
-      description,
-      done,
-      editing,
-      className,
-      onDeleted,
-      onCheckBoxClick,
-      onEditing,
-      time,
-      onStopTimer,
-      onStartTimer,
-    } = this.props
-    const { timeFromCreating, inputValue } = this.state
-
-    if (done) {
-      className = 'completed'
-    }
-    if (editing) {
-      className = 'editing'
-    }
-
-    let minutes = Math.floor(time / 60)
-    const seconds = time - minutes * 60
-
-    return (
-      <li className={className}>
-        {editing ? (
-          <EditingForm
-            onSubmit={this.onSubmit}
-            onChanging={this.onChanging}
-            inputValue={inputValue}
-            onEditing={onEditing}
-            onClickedAfterTarget={this.onClickedAfterTarget}
-          />
-        ) : (
-          <div className="view">
-            <input className="toggle" type="checkbox" checked={done} onChange={onCheckBoxClick} />
-            <label>
-              <span className="title">{description} </span>
-              <span className="description">
-                <button onClick={onStartTimer} className="icon icon-play"></button>
-                <button onClick={onStopTimer} className="icon icon-pause"></button>
-                {minutes > 9 ? minutes : `0${minutes}`}:{seconds > 9 ? seconds : `0${seconds}`}
-              </span>
-
-              <span className="description">{timeFromCreating}</span>
-            </label>
-            <button className="icon icon-edit" onClick={onEditing}></button>
-            <button className="icon icon-destroy" onClick={onDeleted}></button>
-          </div>
-        )}
-      </li>
+      })
     )
   }
+
+  const onChanging = (e) => {
+    setInputValue(e.target.value)
+  }
+
+  const onSubmit = (e) => {
+    e.preventDefault()
+    setDescription(inputValue)
+    onEditingTask(inputValue)
+  }
+
+  const onClickedAfterTarget = () => {
+    setInputValue(description)
+    propsOnClickedAfterTarget()
+  }
+
+  if (done) {
+    className = 'completed'
+  }
+  if (editing) {
+    className = 'editing'
+  }
+
+  let minutes = Math.floor(time / 60)
+  const seconds = time - minutes * 60
+
+  return (
+    <li className={className}>
+      {editing ? (
+        <EditingForm
+          onSubmit={onSubmit}
+          onChanging={onChanging}
+          inputValue={inputValue}
+          onEditing={onEditing}
+          onClickedAfterTarget={onClickedAfterTarget}
+        />
+      ) : (
+        <div className="view">
+          <input className="toggle" type="checkbox" checked={done} onChange={onCheckBoxClick} />
+          <label>
+            <span className="title">{description} </span>
+            <span className="description">
+              <button onClick={onStartTimer} className="icon icon-play"></button>
+              <button onClick={onStopTimer} className="icon icon-pause"></button>
+              {minutes > 9 ? minutes : `0${minutes}`}:{seconds > 9 ? seconds : `0${seconds}`}
+            </span>
+
+            <span className="description">{timeFromCreating}</span>
+          </label>
+          <button className="icon icon-edit" onClick={onEditing}></button>
+          <button className="icon icon-destroy" onClick={onDeleted}></button>
+        </div>
+      )}
+    </li>
+  )
 }
 
 const EditingForm = ({ onSubmit, inputValue, onChanging, onClickedAfterTarget }) => {
@@ -161,3 +129,16 @@ const EditingForm = ({ onSubmit, inputValue, onChanging, onClickedAfterTarget })
     </div>
   )
 }
+
+Task.propTypes = {
+  description: PropTypes.string.isRequired,
+  done: PropTypes.bool.isRequired,
+  editing: PropTypes.bool.isRequired,
+  className: PropTypes.string,
+  created: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.string]),
+  onDeleted: PropTypes.func,
+  onCheckBoxClick: PropTypes.func,
+  onEditing: PropTypes.func,
+}
+
+export default Task

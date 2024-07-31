@@ -1,98 +1,94 @@
-import React, { Component } from 'react'
+import React, { useState } from 'react'
 import './NewTaskForm.css'
 import PropTypes from 'prop-types'
 
-export default class NewTaskForm extends Component {
-  state = {
-    text: '',
-    minutes: '',
-    seconds: '',
-  }
+function NewTaskForm({
+  onAdded = () => {},
+  className = ' ',
+  placeholder = 'What needs to be done?',
+  autoFocus = false,
+}) {
+  const [text, setText] = useState('')
+  const [minutes, setMinutes] = useState('')
+  const [seconds, setSeconds] = useState('')
 
-  static propTypes = {
-    autoFocus: PropTypes.bool,
-    placeholder: PropTypes.string,
-    className: PropTypes.string,
-  }
-
-  static defaultProps = {
-    autoFocus: false,
-    placeholder: 'What needs to be done?',
-    className: ' ',
-  }
-
-  onChanging = (e) => {
+  const onChanging = (e) => {
     const { name, value } = e.target
-    this.setState({
-      [name]: value,
-    })
-  }
-
-  validateTimeInput = (e) => {
-    const { value } = e.target
-    if (value <= 60 && value >= 0) {
-      this.onChanging(e)
+    if (name === 'minutes') {
+      setMinutes(value)
+    }
+    if (name === 'text') {
+      setText(value)
+    }
+    if (name === 'seconds') {
+      setSeconds(value)
     }
   }
 
-  onSubmit = (e) => {
-    const { text, minutes, seconds } = this.state
+  const validateTimeInput = (e) => {
+    const { value } = e.target
+    if (value <= 60 && value >= 0) {
+      onChanging(e)
+    }
+  }
+
+  const onSubmit = (e) => {
     const time = +minutes * 60 + +seconds
     e.preventDefault()
     if (text !== ' ' && text !== '') {
-      this.props.onAdded(text, time)
-      this.setState({
-        text: '',
-        minutes: '',
-        seconds: '',
-      })
+      onAdded(text, time)
+      setText('')
+      setSeconds('')
+      setMinutes('')
     }
   }
 
-  onKeyDown = (e) => {
-    const { text } = this.state
+  const onKeyDown = (e) => {
     if (e.code === 'Enter') {
-      this.onSubmit(e)
+      onSubmit(e)
     }
     if (text === ' ') {
-      this.setState({
-        text: '',
-      })
+      setText('')
     }
   }
 
-  render() {
-    const { className, placeholder, autoFocus } = this.props
-    return (
-      <form className={'new-todo-form'} onSubmit={this.onSubmit} onChange={() => {}}>
-        <input
-          name="text"
-          className={className}
-          placeholder={placeholder}
-          autoFocus={autoFocus}
-          onChange={this.onChanging}
-          onKeyDown={this.onKeyDown}
-          value={this.state.text}
-        />
-        <input
-          name="minutes"
-          className="new-todo-form__timer"
-          value={this.state.minutes}
-          onChange={this.validateTimeInput}
-          placeholder="Min"
-          onKeyDown={this.onKeyDown}
-          autoFocus
-        />
-        <input
-          name="seconds"
-          className="new-todo-form__timer"
-          value={this.state.seconds}
-          onChange={this.validateTimeInput}
-          placeholder="Sec"
-          autoFocus
-          onKeyDown={this.onKeyDown}
-        />
-      </form>
-    )
-  }
+  return (
+    <form className={'new-todo-form'} onSubmit={onSubmit} onChange={() => {}}>
+      <input
+        name="text"
+        className={className}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        onChange={onChanging}
+        onKeyDown={onKeyDown}
+        value={text}
+      />
+      <input
+        name="minutes"
+        className="new-todo-form__timer"
+        value={minutes}
+        onChange={validateTimeInput}
+        placeholder="Min"
+        onKeyDown={onKeyDown}
+        autoFocus
+      />
+      <input
+        name="seconds"
+        className="new-todo-form__timer"
+        value={seconds}
+        onChange={validateTimeInput}
+        placeholder="Sec"
+        autoFocus
+        onKeyDown={onKeyDown}
+      />
+    </form>
+  )
 }
+
+NewTaskForm.propTypes = {
+  autoFocus: PropTypes.bool,
+  placeholder: PropTypes.string,
+  className: PropTypes.string,
+}
+
+export default NewTaskForm
