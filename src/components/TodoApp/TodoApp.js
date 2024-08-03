@@ -5,10 +5,10 @@ import TaskList from '../TaskList'
 import Footer from '../Footer'
 import './TodoApp.css'
 
-function TodoApp() {
-  let maxId = 100
-  let maxFilterKey = 1
+let maxId = 100
+let maxFilterKey = 1
 
+function TodoApp() {
   const createTask = (description, time) => {
     return {
       id: maxId++,
@@ -79,7 +79,9 @@ function TodoApp() {
   const addTask = (description, time) => {
     const newTask = createTask(description, time)
     setTasks([...tasks.slice(), newTask])
-    onStartTimer(timerId)
+    if (timerId) {
+      onStartTimer(timerId)
+    }
   }
 
   const editTaskDescription = (id, value) => {
@@ -96,7 +98,7 @@ function TodoApp() {
 
   const deleteItem = (id) => {
     let newTasks = tasks.filter((item) => item.id !== id)
-    id === timerId && onStopTimer()
+    timerId && onStopTimer()
     setTasks(newTasks)
   }
 
